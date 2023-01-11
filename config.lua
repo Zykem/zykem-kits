@@ -1,41 +1,42 @@
 cfg = {}
 
-cfg.esxInit = 'esx:getSharedObject'
+cfg.esxInit = 'hypex:getTwojStarySharedTwojaStaraObject'
 
 -- Logs
 cfg.Logs = true -- WEBHOOK USTAW W server.lua
 
 
--- cooldowns (hours)
-cfg.basicCooldown = 24
-cfg.ironCooldown = 48
-cfg.goldCooldown = 72
-cfg.diamondCooldown = 120
+-- kit-cooldowns (hours)
+cfg.cooldown = 24
 
 cfg.Kits = {
 
-    basic = {
+    gracz = {
 
-        { item = "bread", amount=25},
-        {item = "water", amount = 25}
-
-    },
-    iron = {
-
-        { item = "bread", amount=25},
-        {item = "water", amount = 25}
+        { item = "bread", amount=1},
+        {item = "water", amount = 1},
+        {coins = 1}
 
     },
-    gold = {
+    vip = {
 
-        { item = "bread", amount=25},
-        {item = "water", amount = 25}
+        { item = "bread", amount=2},
+        {item = "water", amount = 2},
+        {coins = 10}
 
     },
-    diamond = {
+    svip = {
 
-        { item = "bread", amount=25},
-        {item = "water", amount = 25}
+        { item = "bread", amount=3},
+        {item = "water", amount = 3},
+        {coins = 100}
+
+    },
+    legend = {
+
+        { item = "bread", amount=4},
+        {item = "water", amount = 4},
+        {coins = 1000}
 
     },
 

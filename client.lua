@@ -15,7 +15,7 @@ RegisterNUICallback("basickit", function(data)
         
         print('Succesfully redeemed kit!')
     
-    end, 'basic')
+    end, 'gracz')
 
 end)
 
@@ -25,7 +25,7 @@ RegisterNUICallback("ironkit", function(data)
     
         print('Succesfully redeemed kit!')
     
-    end, 'iron')
+    end, 'vip')
 
 end)
 
@@ -35,7 +35,7 @@ RegisterNUICallback("goldkit", function(data)
 
         print('Succesfully redeemed kit!')
 
-    end, 'gold')
+    end, 'svip')
 
 end)
 
@@ -45,7 +45,7 @@ RegisterNUICallback("diamondkit", function(data)
         
         print('Succesfully redeemed kit!')
     
-    end, 'diamond')
+    end, 'legend')
 
 end)
 

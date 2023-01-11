@@ -2,6 +2,8 @@
 fx_version('cerulean')
 games({ 'gta5' })
 
+-- Edycja UI - przejdz do pliku ui/ui_config.js
+
 shared_script('');
 
 server_scripts({
@@ -29,5 +31,6 @@ files({
     'ui/script.js'
 
 })
+
 
 ui_page('ui/index.html')

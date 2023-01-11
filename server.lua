@@ -5,327 +5,95 @@ local LOGS_WEBHOOK = 'https://discord.com/api/webhooks/'
 
 ESX.RegisterServerCallback('kits:odbierz', function(source,cb, kit)
     local xPlayer = ESX.GetPlayerFromId(source)
-    MySQL.Async.execute("UPDATE `users` set kitsPermsLevel=@level WHERE identifier=@hex",  {
-        ['@hex'] = hex,
-        ['@level'] = kit
-    })
-    MySQL.Async.fetchAll('SELECT hex,type,expires as timestamp FROM zykem_kits WHERE hex = @hex AND type = @type', {
+    local rank = string.lower(exports.zykem_coinsystem:getRank(xPlayer.getIdentifier()))
+    if rank ~= 'gracz' and rank ~= 'vip' and rank ~= 'svip' and rank ~= 'legend' then return false end;
     
-        ['@hex'] = xPlayer.getIdentifier(),
-        ['@type'] = kit
+    if rank == kit then
+        MySQL.Async.fetchAll('SELECT identifier,type,expires as timestamp FROM zykem_kits WHERE identifier = @identifier AND type = @type', {
+        
+            ['@identifier'] = xPlayer.getIdentifier(),
+            ['@type'] = kit
 
-    }, function(result)
+        }, function(result)   
+            if result[1] ~= nil then TriggerClientEvent('esx:showNotification', xPlayer.source, 'Juz odebrales ten Zestaw! ') return end;
+        
+            local insertData = {
+                rok = round(os.date('%Y'),0),
+                miesiac = round(os.date('%m'),0),
+                dzien = round(os.date('%d'),0),
+                godzina = round(os.date('%H') + cfg.cooldown,0),
+                minuta = round(os.date('%M'),0),
+                sekunda = round(os.date('%S'),0)
+                
+            }
+            local formatted_Date = {year = insertData.rok, month = insertData.miesiac, day = insertData.dzien, hour = insertData.godzina, min = insertData.minuta, sec = insertData.sekunda}
+            local finalDate = os.time(formatted_Date)
+            items = {}
+            
+            for k,v in pairs (cfg.Kits[string.lower(rank)]) do
 
-        MySQL.Async.fetchAll('SELECT kitsPermsLevel FROM users WHERE identifier=@hex', {
-
-            ['@hex'] = xPlayer.getIdentifier()
-
-        }, function(result2)
-        
-            if kit == 'basic' then
-
-                if result[1] ~= nil then
-    
-                    TriggerClientEvent('esx:showNotification', xPlayer.source, 'Juz odebrales ten Zestaw! ')
-    
-                else
-                    
-
-                    local insertData = {
-                        rok = round(os.date('%Y'),0),
-                        miesiac = round(os.date('%m'),0),
-                        dzien = round(os.date('%d'),0),
-                        godzina = round(os.date('%H') + cfg.basicCooldown,0),
-                        minuta = round(os.date('%M'),0),
-                        sekunda = round(os.date('%S'),0)
-                  
-                    }
-                    local cData = {year = insertData.rok, month = insertData.miesiac, day = insertData.dzien, hour = insertData.godzina, min = insertData.minuta, sec = insertData.sekunda}
-                    local final_data = os.time(cData)
-                    items = {}
-        
-                    for k,v in pairs (cfg.Kits.basic) do
-        
-                        if v.item then
-        
-                            if v.amount then
-        
-                                table.insert(items, {
-        
-                                    item = v.item,
-                                    amount = v.amount
-        
-                                })
-        
-                            end
-        
-                        end
-        
+                if v.item then
+                                
+                    if v.amount then
+            
+                        table.insert(items, {
+            
+                            item = v.item,
+                            amount = v.amount
+            
+                            })
+            
                     end
-        
                     for k,v in pairs(items) do
-        
+            
                         xPlayer.addInventoryItem(v.item, v.amount)
-        
+                    
                     end
-        
-                    if cfg.Logs == true then
-        
-                        zykem_SendWebhook('/kits', 'Gracz odebral Zestaw Basic!', xPlayer.source)
-        
-                    end
-        
-                    MySQL.Sync.execute('INSERT INTO zykem_kits (hex,type,expires) VALUES (@hex, @type, @expires)', {
-        
-                        ['@hex'] = xPlayer.getIdentifier(),
-                        ['@type'] = kit,
-                        ['@expires'] = final_data
-        
-                    })
-        
-                    cb(true)
-    
                 end
-    
-            elseif kit == 'iron' then
-    
-                if result[1] ~= nil then
-    
-                    TriggerClientEvent('esx:showNotification', xPlayer.source, 'Juz odebrales ten Zestaw! ')
-    
-                else
-    
-                    if result2[1].kitsPermsLevel >= 1 then
+                if v.coins then
+                    print(v.coins)
+                    exports["zykem_coinsystem"]:addUserCoins(source,xPlayer.getIdentifier(), v.coins)
 
-                        local insertData = {
-                            rok = round(os.date('%Y'),0),
-                            miesiac = round(os.date('%m'),0),
-                            dzien = round(os.date('%d'),0),
-                            godzina = round(os.date('%H') + cfg.ironCooldown,0),
-                            minuta = round(os.date('%M'),0),
-                            sekunda = round(os.date('%S'),0)
-                      
-                        }
-                        local cData = {year = insertData.rok, month = insertData.miesiac, day = insertData.dzien, hour = insertData.godzina, min = insertData.minuta, sec = insertData.sekunda}
-                        local final_data = os.time(cData)
-                        items = {}
-            
-                        for k,v in pairs (cfg.Kits.iron) do
-            
-                            if v.item then
-            
-                                if v.amount then
-            
-                                    table.insert(items, {
-            
-                                        item = v.item,
-                                        amount = v.amount
-            
-                                    })
-            
-                                end
-            
-                            end
-            
-                        end
-            
-                        for k,v in pairs(items) do
-            
-                            xPlayer.addInventoryItem(v.item, v.amount)
-            
-                        end
-            
-                        if cfg.Logs == true then
-            
-                            zykem_SendWebhook('/kits', 'Gracz odebral Zestaw Iron!', xPlayer.source)
-            
-                        end
-            
-                        MySQL.Sync.execute('INSERT INTO zykem_kits (hex,type,expires) VALUES (@hex, @type, @expires)', {
-            
-                            ['@hex'] = xPlayer.getIdentifier(),
-                            ['@type'] = kit,
-                            ['@expires'] = final_data
-            
-                        })
-            
-                        cb(true)
-                    else
-
-                        TriggerClientEvent('esx:showNotification', xPlayer.source, 'Nie posiadasz Dostępu do tego Zestawu!')
-
-                    end
-    
                 end
-    
-            elseif kit == 'gold' then
-    
-                if result[1] ~= nil then
-    
-                    TriggerClientEvent('esx:showNotification', xPlayer.source, 'Juz odebrales ten Zestaw! ')
-    
-                else
-    
-                    if result2[1].kitsPermsLevel >= 2 then
-
-                        local insertData = {
-                            rok = round(os.date('%Y'),0),
-                            miesiac = round(os.date('%m'),0),
-                            dzien = round(os.date('%d'),0),
-                            godzina = round(os.date('%H') + cfg.goldCooldown,0),
-                            minuta = round(os.date('%M'),0),
-                            sekunda = round(os.date('%S'),0)
-                      
-                        }
-                        local cData = {year = insertData.rok, month = insertData.miesiac, day = insertData.dzien, hour = insertData.godzina, min = insertData.minuta, sec = insertData.sekunda}
-                        local final_data = os.time(cData)
-                        items = {}
             
-                        for k,v in pairs (cfg.Kits.gold) do
-            
-                            if v.item then
-            
-                                if v.amount then
-            
-                                    table.insert(items, {
-            
-                                        item = v.item,
-                                        amount = v.amount
-            
-                                    })
-            
-                                end
-            
-                            end
-            
-                        end
-            
-                        for k,v in pairs(items) do
-            
-                            xPlayer.addInventoryItem(v.item, v.amount)
-            
-                        end
-            
-                        if cfg.Logs == true then
-            
-                            zykem_SendWebhook('/kits', 'Gracz odebral Zestaw Gold!', xPlayer.source)
-            
-                        end
-            
-                        MySQL.Sync.execute('INSERT INTO zykem_kits (hex,type,expires) VALUES (@hex, @type, @expires)', {
-            
-                            ['@hex'] = xPlayer.getIdentifier(),
-                            ['@type'] = kit,
-                            ['@expires'] = final_data
-            
-                        })
-            
-                        cb(true)
-                    else
-
-                        TriggerClientEvent('esx:showNotification', xPlayer.source, 'Nie posiadasz Dostępu do tego Zestawu!')
-
-                    end
-    
-                end
-    
-            elseif kit == 'diamond' then
-    
-                if result[1] ~= nil then
-    
-                    TriggerClientEvent('esx:showNotification', xPlayer.source, 'Juz odebrales ten Zestaw! ')
-    
-                else
-    
-                    if result2[1].kitsPermsLevel >= 3 then
-
-                        local insertData = {
-                            rok = round(os.date('%Y'),0),
-                            miesiac = round(os.date('%m'),0),
-                            dzien = round(os.date('%d'),0),
-                            godzina = round(os.date('%H') + cfg.diamondCooldown,0),
-                            minuta = round(os.date('%M'),0),
-                            sekunda = round(os.date('%S'),0)
-                      
-                        }
-                        local cData = {year = insertData.rok, month = insertData.miesiac, day = insertData.dzien, hour = insertData.godzina, min = insertData.minuta, sec = insertData.sekunda}
-                        local final_data = os.time(cData)
-                        items = {}
-            
-                        for k,v in pairs (cfg.Kits.diamond) do
-            
-                            if v.item then
-            
-                                if v.amount then
-            
-                                    table.insert(items, {
-            
-                                        item = v.item,
-                                        amount = v.amount
-            
-                                    })
-            
-                                end
-            
-                            end
-            
-                        end
-            
-                        for k,v in pairs(items) do
-            
-                            xPlayer.addInventoryItem(v.item, v.amount)
-            
-                        end
-            
-                        if cfg.Logs == true then
-            
-                            zykem_SendWebhook('/kits', 'Gracz odebral Zestaw Diamond!', xPlayer.source)
-            
-                        end
-            
-                        MySQL.Sync.execute('INSERT INTO zykem_kits (hex,type,expires) VALUES (@hex, @type, @expires)', {
-            
-                            ['@hex'] = xPlayer.getIdentifier(),
-                            ['@type'] = kit,
-                            ['@expires'] = final_data
-            
-                        })
-            
-                        cb(true)
-
-                    else
-
-                        TriggerClientEvent('esx:showNotification', xPlayer.source, 'Nie posiadasz Dostępu do tego Zestawu!')
-
-                    end
-    
-                end
-    
             end
+            
+            if cfg.Logs == true then
+            
+                zykem_SendWebhook(kit, 'Gracz odebral Zestaw!', xPlayer.source)
+            
+            end
+            
+            MySQL.Sync.execute('INSERT INTO zykem_kits (identifier,type,expires) VALUES (@identifier, @type, @expires)', {
         
+                ['@identifier'] = xPlayer.getIdentifier(),
+                ['@type'] = kit,
+                ['@expires'] = finalDate
+        
+            })
+            items = {}
+            cb(true)
+
         end)
-        
-        
-    end)
-
-
-
+    else
+        TriggerClientEvent('esx:showNotification', xPlayer.source, 'Do tego Zestawu nie posiadasz Permisji!')
+    end
 end)
 
 RegisterServerEvent('kits:expired')
-AddEventHandler('kits:expired', function(hex)
-	MySQL.Async.execute('DELETE FROM zykem_kits WHERE hex = @hex', 
+AddEventHandler('kits:expired', function(identifier)
+	MySQL.Async.execute('DELETE FROM zykem_kits WHERE identifier = @identifier', 
 	{
-		['@hex'] = hex
+		['@identifier'] = identifier
 	}, function(rowsChanged)
-		print("[INFO] # Usunieto " .. hex .. ' z cooldownu Kitu!')
+		print("[INFO] # Usunieto " .. identifier .. ' z cooldownu Kitu!')
 	end)
 end)
 
 function checkTime(d, h, m)
 	print("[INFO] # Sprawdzam Czas")
 
-	MySQL.Async.fetchAll('SELECT hex, expires as timestamp FROM zykem_kits', 
+	MySQL.Async.fetchAll('SELECT identifier, expires as timestamp FROM zykem_kits', 
 		{
 			
 		}, 
@@ -333,14 +101,22 @@ function checkTime(d, h, m)
 			local time_now = os.time()
 			for i=1, #result, 1 do
 				local dostepTime = result[i].timestamp
+                print(dostepTime .. ' ' .. time_now)
 				if dostepTime <= time_now then
-					TriggerEvent('kits:expired', result[i].hex)
+					TriggerEvent('kits:expired', result[i].identifier)
 				end
 			end
 		end
 	)
 end
+CreateThread(function()
+    while true do
 
+        checkTime()
+        Wait(1000 * 60 * 10)
+    end
+
+end)
 
 
 function round(num, numDecimalPlaces)
@@ -351,7 +127,7 @@ function round(num, numDecimalPlaces)
     return math.floor(num + 0.5)
   end
 
-function zykem_SendWebhook(eventname,wiecejinfo,idgracza)
+function zykem_SendWebhook(kit,wiecejinfo,idgracza)
 	local steamid  = 'brak'
     local license  = 'brak'
     local discord  = 'brak'
@@ -382,7 +158,7 @@ function zykem_SendWebhook(eventname,wiecejinfo,idgracza)
         {
             ["color"] = 16753920,
             ["title"] = "**zykem_kits**",
-            ["description"] = 'Gracz wlasnie uzyl `'..eventname..'`\nSteamID: **'..steamid..'**\nLicencja: **'..license..'**\nIP: **'..ip..'\n**ID Serwerowe:**' .. idgracza .. '\n**Nick Gracza:** '..GetPlayerName(idgracza)..'\n\n**Wiecej info:**'..wiecejinfo..'**',
+            ["description"] = 'Gracz wlasnie uzyl `'..kit..'`\nSteamID: **'..steamid..'**\nLicencja: **'..license..'**\nIP: **'..ip..'\n**ID Serwerowe:**' .. idgracza .. '\n**Nick Gracza:** '..GetPlayerName(idgracza)..'\n\n**Wiecej info:**'..wiecejinfo..'**',
             ["footer"] = {
                 ["text"] = 'zykem_kits Logs',
             },
@@ -391,54 +167,3 @@ function zykem_SendWebhook(eventname,wiecejinfo,idgracza)
 	PerformHttpRequest(LOGS_WEBHOOK, function(err, text, headers) end, 'POST', json.encode({username = 'zykem_kits', embeds = embed}), { ['Content-Type'] = 'application/json' })
 
 end
-
-RegisterCommand('setkit', function(source, args)
-    local targetid = args[1]
-    local xPlayer = ESX.GetPlayerFromId(source)
-    local target
-    local hex
-    local kit
-    if targetid ~= nil and args[2] ~= nil then
-        target = ESX.GetPlayerFromId(targetid)
-        hex = target.getIdentifier()
-         kit = args[2]
-        print('test')
-    end
-
-        if xPlayer.getGroup() == 'admin' then
-            if hex ~= nil and kit ~= nil then
-
-                if kit == '1' or kit == '2' or kit == '3' then
-                    MySQL.Async.execute("UPDATE `users` set kitsPermsLevel=@level WHERE identifier=@hex",  {
-                        ['@hex'] = hex,
-                        ['@level'] = kit
-                    })
-                    TriggerClientEvent('esx:showNotification', xPlayer.source, 'Nadałeś permisje do Zestawu graczowi ' .. GetPlayerName(targetid))
-        
-                else
-                    
-                    print('Niepoprawny kit/hex!\nDDostepne kity: 1,2,3 (1=iron | 2 = gold | 3 = diamond )\nUzycie: /kit id kit')
-        
-                end
-        
-            else
-                print('Niepoprawny kit/hex!\nDostepne kity: 1,2,3 (1=iron | 2 = gold | 3 = diamond )\nUzycie: /kit id kit')
-            end
-        else 
-
-            TriggerClientEvent('esx:showNotification', xPlayer.source, 'Nie posiadasz Permisji!')
-
-        end
-    
-end)
-
--- cron tasks
-TriggerEvent('cron:runAt', 02, 0, checkTime)
-TriggerEvent('cron:runAt', 04, 0, checkTime)
-TriggerEvent('cron:runAt', 12, 0, checkTime)
-TriggerEvent('cron:runAt', 14, 0, checkTime)
-TriggerEvent('cron:runAt', 16, 0, checkTime)
-TriggerEvent('cron:runAt', 18, 0, checkTime)
-TriggerEvent('cron:runAt', 20, 0, checkTime)
-TriggerEvent('cron:runAt', 22, 0, checkTime)
-TriggerEvent('cron:runAt', 24, 0, checkTime)
