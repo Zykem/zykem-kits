@@ -17,7 +17,7 @@ Add following command in your server.cfg File
 </ul>
 <h1>Showcase</h1>
 <ul>
-  <li>https://www.youtube.com/watch?v=6iiQommKcTg&ab_channel=zykem</li>
+  <li>https://youtu.be/bpXGXZUVwOg</li>
 </ul>
 
 <h1>Todo</h1>
